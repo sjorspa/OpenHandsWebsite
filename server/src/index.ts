@@ -61,7 +61,7 @@ app.register(async (instance) => {
   });
 
   instance.get('/:id', (req, reply) => {
-    const article = db.getNewsArticle(req.params as any);
+    const article = db.getNewsArticleBySlug((req.params as any).id);
     if (!article) return reply.code(404).send({ error: 'News article not found' });
     return reply.send(article);
   });
@@ -129,7 +129,7 @@ app.register(async (instance) => {
   });
 
   instance.get('/:id', (req, reply) => {
-    const post = db.getBlogPost(req.params as any);
+    const post = db.getBlogPostBySlug((req.params as any).id);
     if (!post) return reply.code(404).send({ error: 'Blog post not found' });
     return reply.send(post);
   });
