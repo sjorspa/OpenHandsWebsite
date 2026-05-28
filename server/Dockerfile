@@ -21,7 +21,7 @@ RUN npm run build
 # Runtime stage
 FROM node:20-bookworm-slim
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
 WORKDIR /app
 
