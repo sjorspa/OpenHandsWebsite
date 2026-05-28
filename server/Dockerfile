@@ -1,7 +1,15 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20-bookworm AS builder
 
 WORKDIR /app
+
+# Install build dependencies for better-sqlite3
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    make \
+    g++ \
+    sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package*.json ./
@@ -11,7 +19,7 @@ COPY . .
 RUN npm run build
 
 # Runtime stage
-FROM node:20-alpine
+FROM node:20-bookworm-slim
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
