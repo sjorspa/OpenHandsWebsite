@@ -1,6 +1,5 @@
 import Fastify from 'fastify';
-// @ts-expect-error fastify-cors missing types
-import cors from 'fastify-cors';
+import cors from "@fastify/cors";
 import { DatabaseConnection } from './models/database.js';
 import { newsRoutes, blogRoutes, shopRoutes, agendaRoutes } from './routes/index.js';
 
