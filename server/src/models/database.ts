@@ -149,26 +149,27 @@ export class DatabaseConnection {
     // Migrate shops table
     const shopsColumns = this.db.prepare("PRAGMA table_info(shops)").all() as { name: string }[];
     if (!shopsColumns.some((c) => c.name === 'slug')) {
-      this.db.exec('ALTER TABLE shops ADD COLUMN slug TEXT UNIQUE NOT NULL DEFAULT ""');
+      this.db.exec('ALTER TABLE shops ADD COLUMN slug TEXT DEFAULT ""');
       // Populate slug for existing shops
-      const stmt = this.db.prepare('SELECT id, name FROM shops WHERE slug = ?');
-      const allShops = this.db.prepare('SELECT id, name FROM shops WHERE slug = ?').all('') as { id: string; name: string }[];
+      const allShops = this.db.prepare('SELECT id, name FROM shops WHERE slug = ""').all() as { id: string; name: string }[];
       for (const shop of allShops) {
         const slug = shop.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         this.db.prepare('UPDATE shops SET slug = ? WHERE id = ?').run(slug, shop.id);
       }
+      this.db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_shops_slug ON shops(slug)');
     }
 
     // Migrate agenda_items table
     const agendaColumns = this.db.prepare("PRAGMA table_info(agenda_items)").all() as { name: string }[];
     if (!agendaColumns.some((c) => c.name === 'slug')) {
-      this.db.exec('ALTER TABLE agenda_items ADD COLUMN slug TEXT UNIQUE NOT NULL DEFAULT ""');
+      this.db.exec('ALTER TABLE agenda_items ADD COLUMN slug TEXT DEFAULT ""');
       // Populate slug for existing agenda items
-      const allItems = this.db.prepare('SELECT id, title FROM agenda_items WHERE slug = ?').all('') as { id: string; title: string }[];
+      const allItems = this.db.prepare('SELECT id, title FROM agenda_items WHERE slug = ""').all() as { id: string; title: string }[];
       for (const item of allItems) {
         const slug = item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         this.db.prepare('UPDATE agenda_items SET slug = ? WHERE id = ?').run(slug, item.id);
       }
+      this.db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_agenda_items_slug ON agenda_items(slug)');
     }
   }
 

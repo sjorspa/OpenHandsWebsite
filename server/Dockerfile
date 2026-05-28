@@ -23,8 +23,9 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Create data directory for SQLite
+# Create data directory for SQLite with proper permissions
 RUN mkdir -p /app/data && chown -R appuser:appgroup /app/data
+RUN chmod -R 777 /app/data
 
 ENV NODE_ENV=production
 ENV PORT=3001
