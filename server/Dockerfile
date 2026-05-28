@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make \
     g++ \
     sqlite3 \
+    libsqlite3-dev \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
