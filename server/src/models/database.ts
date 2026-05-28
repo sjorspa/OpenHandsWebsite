@@ -32,6 +32,7 @@ export interface BlogPost {
 }
 
 export interface Shop {
+  slug: string;
   id: string;
   name: string;
   description: string;
@@ -48,6 +49,7 @@ export interface Shop {
 }
 
 export interface AgendaItem {
+  slug: string;
   id: string;
   title: string;
   description: string;
@@ -76,20 +78,19 @@ export class DatabaseConnection {
       CREATE TABLE IF NOT EXISTS news_articles (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
-        slug TEXT UNIQUE NOT NULL,
         content TEXT NOT NULL,
         excerpt TEXT,
         image_url TEXT,
         author TEXT NOT NULL DEFAULT 'Admin',
         published_at TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        slug TEXT UNIQUE NOT NULL
       );
 
       CREATE TABLE IF NOT EXISTS blog_posts (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
-        slug TEXT UNIQUE NOT NULL,
         content TEXT NOT NULL,
         excerpt TEXT,
         image_url TEXT,
@@ -97,7 +98,8 @@ export class DatabaseConnection {
         author TEXT NOT NULL DEFAULT 'Admin',
         published_at TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        slug TEXT UNIQUE NOT NULL
       );
 
       CREATE TABLE IF NOT EXISTS shops (
@@ -113,7 +115,8 @@ export class DatabaseConnection {
         longitude REAL,
         featured INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        slug TEXT UNIQUE NOT NULL
       );
 
       CREATE TABLE IF NOT EXISTS agenda_items (
@@ -128,7 +131,8 @@ export class DatabaseConnection {
         capacity INTEGER,
         registration_url TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        slug TEXT UNIQUE NOT NULL
       );
 
       CREATE INDEX IF NOT EXISTS idx_news_published ON news_articles(published_at DESC);
@@ -291,8 +295,8 @@ export class DatabaseConnection {
   // Shop methods
   createShop(data: Omit<Shop, 'id' | 'createdAt' | 'updatedAt'>): Shop {
     const stmt = this.db.prepare(`
-      INSERT INTO shops (id, name, description, image_url, address, phone, email, website, latitude, longitude, featured)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO shops (id, name, description, slug, image_url, address, phone, email, website, latitude, longitude, featured)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const now = new Date().toISOString();
     const shop: Shop = {
@@ -302,11 +306,16 @@ export class DatabaseConnection {
       updatedAt: now,
     };
     stmt.run(
-      shop.id, shop.name, shop.description, shop.imageUrl,
+      shop.id, shop.name, shop.description, shop.slug, shop.imageUrl,
       shop.address, shop.phone, shop.email, shop.website,
       shop.latitude, shop.longitude, shop.featured ? 1 : 0
     );
     return shop;
+  }
+
+  getShopBySlug(slug: string): Shop | undefined {
+    const stmt = this.db.prepare('SELECT * FROM shops WHERE slug = ?');
+    return stmt.get(slug) as Shop | undefined;
   }
 
   getShop(id: string): Shop | undefined {
@@ -390,8 +399,8 @@ export class DatabaseConnection {
   // Agenda Item methods
   createAgendaItem(data: Omit<AgendaItem, 'id' | 'createdAt' | 'updatedAt'>): AgendaItem {
     const stmt = this.db.prepare(`
-      INSERT INTO agenda_items (id, title, description, start_date, end_date, location, image_url, organizer, capacity, registration_url)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO agenda_items (id, title, description, slug, start_date, end_date, location, image_url, organizer, capacity, registration_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const now = new Date().toISOString();
     const item: AgendaItem = {
@@ -401,10 +410,15 @@ export class DatabaseConnection {
       updatedAt: now,
     };
     stmt.run(
-      item.id, item.title, item.description, item.startDate, item.endDate,
+      item.id, item.title, item.slug, item.description, item.startDate, item.endDate,
       item.location, item.imageUrl, item.organizer, item.capacity, item.registrationUrl
     );
     return item;
+  }
+
+  getAgendaItemBySlug(slug: string): AgendaItem | undefined {
+    const stmt = this.db.prepare('SELECT * FROM agenda_items WHERE slug = ?');
+    return stmt.get(slug) as AgendaItem | undefined;
   }
 
   getAgendaItem(id: string): AgendaItem | undefined {
@@ -606,6 +620,7 @@ export class DatabaseConnection {
     const shops = [
       {
         name: 'The Artisan Bakery',
+        slug: 'artisan-bakery',
         description: 'Artisanal breads, pastries, and custom cakes made with locally sourced ingredients. Famous for our sourdough and croissants.',
         imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&h=400&fit=crop',
         address: '123 Main Street, Downtown',
@@ -618,6 +633,7 @@ export class DatabaseConnection {
       },
       {
         name: 'TechHub Electronics',
+        slug: 'techhub-electronics',
         description: 'Your one-stop shop for the latest electronics, gadgets, and tech accessories. Expert staff and competitive prices.',
         imageUrl: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&h=400&fit=crop',
         address: '456 Tech Boulevard, Innovation District',
@@ -630,6 +646,7 @@ export class DatabaseConnection {
       },
       {
         name: 'Green Leaf Bookstore',
+        slug: 'green-leaf-bookstore',
         description: 'A charming independent bookstore with a curated selection of fiction, non-fiction, and children\'s books. Hosts regular author events.',
         imageUrl: 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=800&h=400&fit=crop',
         address: '789 Oak Avenue, Book Quarter',
@@ -642,6 +659,7 @@ export class DatabaseConnection {
       },
       {
         name: 'Urban Fitness Studio',
+        slug: 'urban-fitness-studio',
         description: 'Modern fitness studio offering personal training, group classes, yoga, and nutrition coaching. State-of-the-art equipment.',
         imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&h=400&fit=crop',
         address: '321 Fitness Lane, Health District',
@@ -654,6 +672,7 @@ export class DatabaseConnection {
       },
       {
         name: 'Vintage Treasures',
+        slug: 'vintage-treasures',
         description: 'Curated collection of vintage and antique items including furniture, decor, jewelry, and collectibles from the 1920s to 1980s.',
         imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=400&fit=crop',
         address: '555 Vintage Way, Antique Row',
@@ -666,6 +685,7 @@ export class DatabaseConnection {
       },
       {
         name: 'Floral Designs',
+        slug: 'floral-designs',
         description: 'Custom floral arrangements for weddings, events, and everyday occasions. Fresh flowers sourced from local growers.',
         imageUrl: 'https://images.unsplash.com/photo-148753081117c-20942f1a3ef1?w=800&h=400&fit=crop',
         address: '888 Garden Road, Flower District',
@@ -678,6 +698,7 @@ export class DatabaseConnection {
       },
       {
         name: 'Coffee House Central',
+        slug: 'coffee-house-central',
         description: 'Specialty coffee roasters serving single-origin espresso, pour-overs, and artisanal coffee-based beverages in a cozy atmosphere.',
         imageUrl: 'https://images.unsplash.com/photo-1501339841348-30c45808eb01?w=800&h=400&fit=crop',
         address: '222 Coffee Street, Downtown',
@@ -690,6 +711,7 @@ export class DatabaseConnection {
       },
       {
         name: 'The Book Nook Café',
+        slug: 'the-book-nook-cafe',
         description: 'A unique combination bookstore and café where you can browse books while enjoying artisan coffee and homemade pastries.',
         imageUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&h=400&fit=crop',
         address: '100 Reading Lane, Book Quarter',
@@ -710,6 +732,7 @@ export class DatabaseConnection {
     const agendaItems = [
       {
         title: 'Spring Music Festival',
+        slug: 'spring-music-festival',
         description: 'A three-day outdoor music festival featuring local and regional bands across multiple stages. Food vendors, art installations, and camping available.',
         startDate: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         endDate: new Date(now.getTime() + 32 * 24 * 60 * 60 * 1000).toISOString(),
@@ -721,6 +744,7 @@ export class DatabaseConnection {
       },
       {
         title: 'Tech Innovation Summit 2025',
+        slug: 'tech-innovation-summit-2025',
         description: 'Join industry leaders for a day of keynotes, panels, and workshops on the latest trends in technology, AI, and digital transformation.',
         startDate: new Date(now.getTime() + 45 * 24 * 60 * 60 * 1000).toISOString(),
         endDate: new Date(now.getTime() + 46 * 24 * 60 * 60 * 1000).toISOString(),
@@ -732,6 +756,7 @@ export class DatabaseConnection {
       },
       {
         title: 'Community Farmers Market',
+        slug: 'community-farmers-market',
         description: 'Weekly farmers market featuring fresh produce, artisan foods, handmade crafts, and live music. Every Saturday morning year-round.',
         startDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         endDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
@@ -743,6 +768,7 @@ export class DatabaseConnection {
       },
       {
         title: 'Charity Marathon for Education',
+        slug: 'charity-marathon-education',
         description: 'Annual charity marathon with 5K, 10K, and full marathon options. All proceeds support local education programs and scholarships.',
         startDate: new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000).toISOString(),
         endDate: new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000).toISOString(),
@@ -754,6 +780,7 @@ export class DatabaseConnection {
       },
       {
         title: 'Art & Crafts Workshop Series',
+        slug: 'art-crafts-workshop-series',
         description: 'Monthly workshop series covering pottery, painting, weaving, and other traditional crafts. All skill levels welcome. Materials provided.',
         startDate: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         endDate: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),

@@ -40,7 +40,7 @@ function ShopsList() {
         ) : (
           <div className="grid grid-4">
             {shops.map(shop => (
-              <Link key={shop.id} to={`/shops/${shop.id}`} className="card">
+              <Link key={shop.id} to={`/shops/${shop.slug}`} className="card">
                 {shop.imageUrl && (
                   <img src={shop.imageUrl} alt={shop.name} className="card-img" loading="lazy" />
                 )}

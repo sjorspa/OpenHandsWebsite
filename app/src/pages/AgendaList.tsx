@@ -75,7 +75,7 @@ function AgendaList() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {items.map(item => (
-              <Link key={item.id} to={`/agenda/${item.id}`} className="card" style={{ display: 'flex', gap: '24px', padding: '20px', alignItems: 'center' }}>
+              <Link key={item.id} to={`/agenda/${item.slug}`} className="card" style={{ display: 'flex', gap: '24px', padding: '20px', alignItems: 'center' }}>
                 {item.imageUrl && (
                   <img
                     src={item.imageUrl}
