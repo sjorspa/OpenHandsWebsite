@@ -140,6 +140,36 @@ export class DatabaseConnection {
       CREATE INDEX IF NOT EXISTS idx_shops_featured ON shops(featured);
       CREATE INDEX IF NOT EXISTS idx_agenda_dates ON agenda_items(start_date);
     `);
+
+    // Migrate existing tables to add slug column if missing
+    this.migrateSlugColumns();
+  }
+
+  private migrateSlugColumns(): void {
+    // Migrate shops table
+    const shopsColumns = this.db.prepare("PRAGMA table_info(shops)").all() as { name: string }[];
+    if (!shopsColumns.some((c) => c.name === 'slug')) {
+      this.db.exec('ALTER TABLE shops ADD COLUMN slug TEXT UNIQUE NOT NULL DEFAULT ""');
+      // Populate slug for existing shops
+      const stmt = this.db.prepare('SELECT id, name FROM shops WHERE slug = ?');
+      const allShops = this.db.prepare('SELECT id, name FROM shops WHERE slug = ?').all('') as { id: string; name: string }[];
+      for (const shop of allShops) {
+        const slug = shop.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        this.db.prepare('UPDATE shops SET slug = ? WHERE id = ?').run(slug, shop.id);
+      }
+    }
+
+    // Migrate agenda_items table
+    const agendaColumns = this.db.prepare("PRAGMA table_info(agenda_items)").all() as { name: string }[];
+    if (!agendaColumns.some((c) => c.name === 'slug')) {
+      this.db.exec('ALTER TABLE agenda_items ADD COLUMN slug TEXT UNIQUE NOT NULL DEFAULT ""');
+      // Populate slug for existing agenda items
+      const allItems = this.db.prepare('SELECT id, title FROM agenda_items WHERE slug = ?').all('') as { id: string; title: string }[];
+      for (const item of allItems) {
+        const slug = item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        this.db.prepare('UPDATE agenda_items SET slug = ? WHERE id = ?').run(slug, item.id);
+      }
+    }
   }
 
   // News Article methods
@@ -399,7 +429,7 @@ export class DatabaseConnection {
   // Agenda Item methods
   createAgendaItem(data: Omit<AgendaItem, 'id' | 'createdAt' | 'updatedAt'>): AgendaItem {
     const stmt = this.db.prepare(`
-      INSERT INTO agenda_items (id, title, description, slug, start_date, end_date, location, image_url, organizer, capacity, registration_url)
+      INSERT INTO agenda_items (id, title, slug, description, start_date, end_date, location, image_url, organizer, capacity, registration_url)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const now = new Date().toISOString();
