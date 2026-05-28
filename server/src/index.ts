@@ -204,7 +204,7 @@ app.register(async (instance) => {
   });
 
   instance.get('/:id', (req, reply) => {
-    const shop = db.getShop(req.params as any);
+    const shop = db.getShopBySlug((req.params as any).id);
     if (!shop) return reply.code(404).send({ error: 'Shop not found' });
     return reply.send(shop);
   });
@@ -215,6 +215,9 @@ app.register(async (instance) => {
     const description = (body.description || '').toString();
     if (!name) return reply.code(400).send({ error: 'Name is required' });
     if (!description) return reply.code(400).send({ error: 'Description is required' });
+    const slug = name.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
     const shop = db.createShop({
       name,
       description,
@@ -226,6 +229,7 @@ app.register(async (instance) => {
       latitude: body.latitude !== undefined ? parseFloat(String(body.latitude)) : null,
       longitude: body.longitude !== undefined ? parseFloat(String(body.longitude)) : null,
       featured: body.featured === true,
+      slug,
     });
     return reply.code(201).send(shop);
   });
@@ -279,7 +283,7 @@ app.register(async (instance) => {
   });
 
   instance.get('/:id', (req, reply) => {
-    const item = db.getAgendaItem(req.params as any);
+    const item = db.getAgendaItemBySlug((req.params as any).id);
     if (!item) return reply.code(404).send({ error: 'Agenda item not found' });
     return reply.send(item);
   });
@@ -294,6 +298,9 @@ app.register(async (instance) => {
     if (!description) return reply.code(400).send({ error: 'Description is required' });
     if (!startDate) return reply.code(400).send({ error: 'Start date is required' });
     if (!endDate) return reply.code(400).send({ error: 'End date is required' });
+    const agendaSlug = title.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
     const item = db.createAgendaItem({
       title,
       description,
@@ -304,6 +311,7 @@ app.register(async (instance) => {
       organizer: (body.organizer || '').toString().trim(),
       capacity: body.capacity !== undefined ? parseInt(String(body.capacity), 10) || null : null,
       registrationUrl: body.registrationUrl || null,
+      slug: agendaSlug,
     });
     return reply.code(201).send(item);
   });

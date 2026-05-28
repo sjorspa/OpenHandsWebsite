@@ -28,6 +28,7 @@ export interface BlogPost {
 export interface Shop {
   id: string;
   name: string;
+  slug: string;
   description: string;
   imageUrl: string | null;
   address: string;
@@ -44,6 +45,7 @@ export interface Shop {
 export interface AgendaItem {
   id: string;
   title: string;
+  slug: string;
   description: string;
   startDate: string;
   endDate: string;

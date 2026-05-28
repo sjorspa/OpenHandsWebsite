@@ -323,6 +323,9 @@ export async function shopRoutes(fastify: FastifyInstance, _opts: unknown, db: D
       return reply.code(400).send({ error: 'Description is required' });
     }
 
+    const shopSlug = name.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
     const shop = db.createShop({
       name,
       description,
@@ -334,6 +337,7 @@ export async function shopRoutes(fastify: FastifyInstance, _opts: unknown, db: D
       latitude,
       longitude,
       featured,
+      slug: shopSlug,
     });
 
     return reply.code(201).send(shop);
@@ -437,6 +441,9 @@ export async function agendaRoutes(fastify: FastifyInstance, _opts: unknown, db:
       return reply.code(400).send({ error: 'End date is required' });
     }
 
+    const itemSlug = title.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
     const item = db.createAgendaItem({
       title,
       description,
@@ -447,6 +454,7 @@ export async function agendaRoutes(fastify: FastifyInstance, _opts: unknown, db:
       organizer,
       capacity,
       registrationUrl,
+      slug: itemSlug,
     });
 
     return reply.code(201).send(item);
